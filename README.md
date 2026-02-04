@@ -88,6 +88,15 @@ Your uploaded `workzone_annotations.json` is a dictionary keyed by video snippet
 }
 ```
 
+## Folder Structure
+- `src/workzone_metrics/`: core library code
+- `src/workzone_metrics/metrics/`: metric implementations (frame accuracy, transitions, events, etc.)
+- `scripts/`: helper scripts (COCO eval, rerun failures, tolerance sweeps)
+- `tests/`: unit tests for metric logic
+- `results/`: generated reports (JSON summaries)
+- `workzone-main/`: imported workzone pipeline (gitignored)
+- `ROADWORK_data/`: dataset files (videos/images/annotations)
+
 ## Predictions inputs
 You can provide either:
 - A predictions JSON with interval states, or
