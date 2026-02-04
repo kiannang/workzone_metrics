@@ -1,4 +1,5 @@
 import json
+import statistics
 from dataclasses import asdict
 from typing import Dict, Any, Optional
 
@@ -9,6 +10,33 @@ from .metrics.state import compute_state_metrics
 def _mean(values):
     values = [v for v in values if v is not None]
     return sum(values) / len(values) if values else None
+
+
+def _stdev(values):
+    values = [v for v in values if v is not None]
+    return statistics.pstdev(values) if len(values) > 1 else 0.0 if values else None
+
+
+def _first_state_frame(states, state: str):
+    intervals = states.get(state, [])
+    if not intervals:
+        return None
+    return min(start for start, _ in intervals)
+
+
+def _add_state_start_stats(
+    payload: Dict[str, Any],
+    gt_states: Dict[str, Any],
+    pred_states: Dict[str, Any],
+    state: str,
+    prefix: str,
+) -> None:
+    gt_start = _first_state_frame(gt_states, state)
+    pred_start = _first_state_frame(pred_states, state)
+    payload[f"gt_{prefix}_start_frame"] = gt_start
+    payload[f"pred_{prefix}_start_frame"] = pred_start
+    if gt_start is not None and pred_start is not None:
+        payload[f"pred_minus_gt_{prefix}_start_frame"] = pred_start - gt_start
 
 
 def generate_report(
@@ -44,6 +72,8 @@ def generate_report(
             min_event_overlap_frames=min_event_overlap_frames,
         )
         payload = asdict(metrics)
+        _add_state_start_stats(payload, gt_entry.states, pred_entry.states, "inside", "inside")
+        _add_state_start_stats(payload, gt_entry.states, pred_entry.states, "approaching", "approaching")
         if pred_entry.fps is not None:
             payload["fps_estimate"] = pred_entry.fps
         videos[video] = payload
@@ -63,6 +93,12 @@ def generate_report(
     mean_pers_sec = [v.get("mean_activation_persistence_sec") for v in videos.values() if "mean_activation_persistence_sec" in v]
     false_per_min = [v.get("false_activations_per_minute") for v in videos.values() if "false_activations_per_minute" in v]
     fps_estimates = [v.get("fps_estimate") for v in videos.values() if "fps_estimate" in v]
+    gt_inside_starts = [v.get("gt_inside_start_frame") for v in videos.values() if "gt_inside_start_frame" in v]
+    pred_inside_starts = [v.get("pred_inside_start_frame") for v in videos.values() if "pred_inside_start_frame" in v]
+    pred_minus_gt = [v.get("pred_minus_gt_inside_start_frame") for v in videos.values() if "pred_minus_gt_inside_start_frame" in v]
+    gt_approaching_starts = [v.get("gt_approaching_start_frame") for v in videos.values() if "gt_approaching_start_frame" in v]
+    pred_approaching_starts = [v.get("pred_approaching_start_frame") for v in videos.values() if "pred_approaching_start_frame" in v]
+    pred_minus_gt_approaching = [v.get("pred_minus_gt_approaching_start_frame") for v in videos.values() if "pred_minus_gt_approaching_start_frame" in v]
 
     summary = {
         "frame_accuracy_mean": _mean(frame_accs),
@@ -80,6 +116,18 @@ def generate_report(
         "mean_activation_persistence_sec_mean": _mean(mean_pers_sec),
         "false_activations_per_minute_mean": _mean(false_per_min),
         "fps_estimate_mean": _mean(fps_estimates),
+        "gt_inside_start_frame_mean": _mean(gt_inside_starts),
+        "gt_inside_start_frame_std": _stdev(gt_inside_starts),
+        "pred_inside_start_frame_mean": _mean(pred_inside_starts),
+        "pred_inside_start_frame_std": _stdev(pred_inside_starts),
+        "pred_minus_gt_inside_start_frame_mean": _mean(pred_minus_gt),
+        "pred_minus_gt_inside_start_frame_std": _stdev(pred_minus_gt),
+        "gt_approaching_start_frame_mean": _mean(gt_approaching_starts),
+        "gt_approaching_start_frame_std": _stdev(gt_approaching_starts),
+        "pred_approaching_start_frame_mean": _mean(pred_approaching_starts),
+        "pred_approaching_start_frame_std": _stdev(pred_approaching_starts),
+        "pred_minus_gt_approaching_start_frame_mean": _mean(pred_minus_gt_approaching),
+        "pred_minus_gt_approaching_start_frame_std": _stdev(pred_minus_gt_approaching),
         "videos_evaluated": len([v for v in videos.values() if "error" not in v]),
         "videos_total": len(videos),
     }

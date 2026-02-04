@@ -3,9 +3,24 @@
 ## Latest Report Summary
 **Filter:** Only videos with all four GT states present and non-empty (190 / 692).
 
+**Summary Table (key metrics)**
+
+| Tolerance (frames) | Frame Acc | Event Prec/Rec | Transition Prec/Rec | Entry MAE (s) | Time-in-Error (s) |
+| --- | --- | --- | --- | --- | --- |
+| 0 | 0.4771 | 0.7421 / 0.9711 | 0.00194 / 0.00351 | 9.18 | 15.70 |
+| 5 | 0.4771 | 0.7421 / 0.9711 | 0.0182 / 0.0353 | 9.18 | 15.70 |
+| 15 | 0.4771 | 0.7421 / 0.9711 | 0.0513 / 0.0958 | 9.18 | 15.70 |
+| 30 | 0.4771 | 0.7421 / 0.9711 | 0.0996 / 0.1757 | 9.18 | 15.70 |
+
 **report.json (tolerance = 0 frames)**
 - Frame accuracy: **0.4771**
 - Entry timing MAE: **293.07 frames (9.18s)**
+- GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
+- Pred INSIDE start (mean ± std): **97.33 ± 121.44 frames**
+- Pred − GT INSIDE start (mean ± std): **-291.28 ± 209.17 frames**
+- GT APPROACHING start (mean ± std): **263.67 ± 231.09 frames**
+- Pred APPROACHING start (mean ± std): **52.80 ± 86.86 frames**
+- Pred − GT APPROACHING start (mean ± std): **-210.87 ± 224.60 frames**
 - Event precision / recall (INSIDE): **0.7421 / 0.9711**
 - Transition precision / recall: **0.00194 / 0.00351**
 - False activation rate (frame-level): **0.5694**
@@ -15,8 +30,44 @@
 **report_tolerance5.json (tolerance = 5 frames)**
 - Frame accuracy: **0.4771**
 - Entry timing MAE: **293.07 frames (9.18s)**
+- GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
+- Pred INSIDE start (mean ± std): **97.33 ± 121.44 frames**
+- Pred − GT INSIDE start (mean ± std): **-291.28 ± 209.17 frames**
+- GT APPROACHING start (mean ± std): **263.67 ± 231.09 frames**
+- Pred APPROACHING start (mean ± std): **52.80 ± 86.86 frames**
+- Pred − GT APPROACHING start (mean ± std): **-210.87 ± 224.60 frames**
 - Event precision / recall (INSIDE): **0.7421 / 0.9711**
 - Transition precision / recall: **0.0182 / 0.0353**
+- False activation rate (frame-level): **0.5694**
+- False activations / minute: **5.17**
+- Time-in-error: **501.66 frames (15.70s)**
+
+**report_tolerance15.json (tolerance = 15 frames)**
+- Frame accuracy: **0.4771**
+- Entry timing MAE: **293.07 frames (9.18s)**
+- GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
+- Pred INSIDE start (mean ± std): **97.33 ± 121.44 frames**
+- Pred − GT INSIDE start (mean ± std): **-291.28 ± 209.17 frames**
+- GT APPROACHING start (mean ± std): **263.67 ± 231.09 frames**
+- Pred APPROACHING start (mean ± std): **52.80 ± 86.86 frames**
+- Pred − GT APPROACHING start (mean ± std): **-210.87 ± 224.60 frames**
+- Event precision / recall (INSIDE): **0.7421 / 0.9711**
+- Transition precision / recall: **0.0513 / 0.0958**
+- False activation rate (frame-level): **0.5694**
+- False activations / minute: **5.17**
+- Time-in-error: **501.66 frames (15.70s)**
+
+**report_tolerance30.json (tolerance = 30 frames)**
+- Frame accuracy: **0.4771**
+- Entry timing MAE: **293.07 frames (9.18s)**
+- GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
+- Pred INSIDE start (mean ± std): **97.33 ± 121.44 frames**
+- Pred − GT INSIDE start (mean ± std): **-291.28 ± 209.17 frames**
+- GT APPROACHING start (mean ± std): **263.67 ± 231.09 frames**
+- Pred APPROACHING start (mean ± std): **52.80 ± 86.86 frames**
+- Pred − GT APPROACHING start (mean ± std): **-210.87 ± 224.60 frames**
+- Event precision / recall (INSIDE): **0.7421 / 0.9711**
+- Transition precision / recall: **0.0996 / 0.1757**
 - False activation rate (frame-level): **0.5694**
 - False activations / minute: **5.17**
 - Time-in-error: **501.66 frames (15.70s)**
