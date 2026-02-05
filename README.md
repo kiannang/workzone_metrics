@@ -3,7 +3,7 @@
 ## Latest Report Summary
 **Filter:** Only videos with all four GT states present and non-empty (190 / 692).
 
-**Summary Table (key metrics)**
+**Summary Table (key metrics, `results_new_strict/*`)**
 
 | Tolerance (frames) | Frame Acc | Event Prec/Rec | Transition Prec/Rec | Entry MAE (s) | Time-in-Error (s) |
 | --- | --- | --- | --- | --- | --- |
@@ -12,7 +12,7 @@
 | 15 | 0.4771 | 0.7421 / 0.9711 | 0.0513 / 0.0958 | 9.18 | 15.70 |
 | 30 | 0.4771 | 0.7421 / 0.9711 | 0.0996 / 0.1757 | 9.18 | 15.70 |
 
-**report.json (tolerance = 0 frames)**
+**results_new_strict/report.json (tolerance = 0 frames)**
 - Frame accuracy: **0.4771**
 - Entry timing MAE: **293.07 frames (9.18s)**
 - GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
@@ -27,7 +27,7 @@
 - False activations / minute: **5.17**
 - Time-in-error: **501.66 frames (15.70s)**
 
-**report_tolerance5.json (tolerance = 5 frames)**
+**results_new_strict/report_tolerance5.json (tolerance = 5 frames)**
 - Frame accuracy: **0.4771**
 - Entry timing MAE: **293.07 frames (9.18s)**
 - GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
@@ -42,7 +42,7 @@
 - False activations / minute: **5.17**
 - Time-in-error: **501.66 frames (15.70s)**
 
-**report_tolerance15.json (tolerance = 15 frames)**
+**results_new_strict/report_tolerance15.json (tolerance = 15 frames)**
 - Frame accuracy: **0.4771**
 - Entry timing MAE: **293.07 frames (9.18s)**
 - GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
@@ -57,7 +57,7 @@
 - False activations / minute: **5.17**
 - Time-in-error: **501.66 frames (15.70s)**
 
-**report_tolerance30.json (tolerance = 30 frames)**
+**results_new_strict/report_tolerance30.json (tolerance = 30 frames)**
 - Frame accuracy: **0.4771**
 - Entry timing MAE: **293.07 frames (9.18s)**
 - GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
@@ -72,10 +72,10 @@
 - False activations / minute: **5.17**
 - Time-in-error: **501.66 frames (15.70s)**
 
-This repo provides a minimal evaluation harness for state-based workzone metrics. It is wired to your ground-truth JSON format and expects a matching predictions JSON format.
+This repo provides a minimal evaluation harness for state-based workzone metrics. It is wired to the ground-truth JSON format and expects a matching predictions JSON format.
 
 ## Ground-truth JSON (current)
-Your uploaded `workzone_annotations.json` is a dictionary keyed by video snippet name, with state intervals in **inclusive** frame indices:
+`workzone_annotations.json` is a dictionary keyed by video snippet name, with state intervals in **inclusive** frame indices:
 
 ```json
 {
@@ -98,7 +98,7 @@ Your uploaded `workzone_annotations.json` is a dictionary keyed by video snippet
 - `ROADWORK_data/`: dataset files (videos/images/annotations)
 
 ## Predictions inputs
-You can provide either:
+Provide either:
 - A predictions JSON with interval states, or
 - A workzone timeline CSV (or a directory of `*_timeline*.csv` files) from `process_video_fusion.py`.
 
@@ -258,9 +258,16 @@ python scripts/coco_eval_yolo.py \\
 - If a video is missing predictions, it is reported with an error entry.
 - If a GT entry has no intervals for any state, it is skipped with `empty_ground_truth`.
 - If a GT entry does not include all four states (`outside`, `approaching`, `inside`, `exiting`) with non-empty intervals, it is skipped with `incomplete_ground_truth`.
- 
+
 ## Why Some Videos Are Skipped
 We skip certain videos to avoid misleading metrics:
 - **`empty_ground_truth`**: The GT has no intervals at all, so there is nothing to score.
 - **`incomplete_ground_truth`**: We require all four states to be present with at least one interval. Missing states make transition/timing metrics ambiguous and inflate accuracy.
 - **`missing predictions or states`**: The model did not produce a timeline CSV or state data for that video, so metrics can’t be computed.
+
+## Conclusion
+The system reliably detects work zones at the event level (INSIDE recall ≈97%), confirming the end-to-end pipeline functions as intended.
+
+Predicted APPROACHING and INSIDE states occur systematically early (~7–10s on average), leading to high recall but poor frame-level accuracy, large time-in-error, and weak exact transition alignment under strict tolerances.
+
+Transition metrics improve predictably as tolerance increases, confirming that errors are dominated by temporal smoothing and persistence rather than missed detections.
