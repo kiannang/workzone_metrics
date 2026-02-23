@@ -1,24 +1,10 @@
 import csv
 import json
 import statistics
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
-StateIntervals = Dict[str, List[Tuple[int, int]]]
-
-
-@dataclass
-class VideoGroundTruth:
-    states: StateIntervals
-
-
-@dataclass
-class VideoPredictions:
-    states: Optional[StateIntervals]
-    fps: Optional[float]
-    detections: Optional[Any]
-    ocr: Optional[Any]
+from .data_models import StateIntervals, VideoGroundTruth, VideoPredictions
 
 
 def _normalize_intervals(intervals: List[List[int]]) -> List[Tuple[int, int]]:

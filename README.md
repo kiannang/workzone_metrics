@@ -1,81 +1,18 @@
 # Workzone Metrics Harness
 
 ## Latest Report Summary
-**Filter:** Only videos with all four GT states present and non-empty (190 / 692).
+Use `results/rerun_reports/` and `results/test_city_reports/` for the latest generated outputs.
 
-**Summary Table (key metrics, `results_new_strict/*`)**
+The report JSON has:
+- `videos`: per-video metrics (or an `error` entry if skipped).
+- `summary`: dataset-level means/std for the same metrics.
 
-| Tolerance (frames) | Frame Acc | Event Prec/Rec | Transition Prec/Rec | Entry MAE (s) | Time-in-Error (s) |
-| --- | --- | --- | --- | --- | --- |
-| 0 | 0.4771 | 0.7421 / 0.9711 | 0.00194 / 0.00351 | 9.18 | 15.70 |
-| 5 | 0.4771 | 0.7421 / 0.9711 | 0.0182 / 0.0353 | 9.18 | 15.70 |
-| 15 | 0.4771 | 0.7421 / 0.9711 | 0.0513 / 0.0958 | 9.18 | 15.70 |
-| 30 | 0.4771 | 0.7421 / 0.9711 | 0.0996 / 0.1757 | 9.18 | 15.70 |
-
-**results_new_strict/report.json (tolerance = 0 frames)**
-- Frame accuracy: **0.4771**
-- Entry timing MAE: **293.07 frames (9.18s)**
-- GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
-- Pred INSIDE start (mean ± std): **97.33 ± 121.44 frames**
-- Pred − GT INSIDE start (mean ± std): **-291.28 ± 209.17 frames**
-- GT APPROACHING start (mean ± std): **263.67 ± 231.09 frames**
-- Pred APPROACHING start (mean ± std): **52.80 ± 86.86 frames**
-- Pred − GT APPROACHING start (mean ± std): **-210.87 ± 224.60 frames**
-- Event precision / recall (INSIDE): **0.7421 / 0.9711**
-- Transition precision / recall: **0.00194 / 0.00351**
-- False activation rate (frame-level): **0.5694**
-- False activations / minute: **5.17**
-- Time-in-error: **501.66 frames (15.70s)**
-
-**results_new_strict/report_tolerance5.json (tolerance = 5 frames)**
-- Frame accuracy: **0.4771**
-- Entry timing MAE: **293.07 frames (9.18s)**
-- GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
-- Pred INSIDE start (mean ± std): **97.33 ± 121.44 frames**
-- Pred − GT INSIDE start (mean ± std): **-291.28 ± 209.17 frames**
-- GT APPROACHING start (mean ± std): **263.67 ± 231.09 frames**
-- Pred APPROACHING start (mean ± std): **52.80 ± 86.86 frames**
-- Pred − GT APPROACHING start (mean ± std): **-210.87 ± 224.60 frames**
-- Event precision / recall (INSIDE): **0.7421 / 0.9711**
-- Transition precision / recall: **0.0182 / 0.0353**
-- False activation rate (frame-level): **0.5694**
-- False activations / minute: **5.17**
-- Time-in-error: **501.66 frames (15.70s)**
-
-**results_new_strict/report_tolerance15.json (tolerance = 15 frames)**
-- Frame accuracy: **0.4771**
-- Entry timing MAE: **293.07 frames (9.18s)**
-- GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
-- Pred INSIDE start (mean ± std): **97.33 ± 121.44 frames**
-- Pred − GT INSIDE start (mean ± std): **-291.28 ± 209.17 frames**
-- GT APPROACHING start (mean ± std): **263.67 ± 231.09 frames**
-- Pred APPROACHING start (mean ± std): **52.80 ± 86.86 frames**
-- Pred − GT APPROACHING start (mean ± std): **-210.87 ± 224.60 frames**
-- Event precision / recall (INSIDE): **0.7421 / 0.9711**
-- Transition precision / recall: **0.0513 / 0.0958**
-- False activation rate (frame-level): **0.5694**
-- False activations / minute: **5.17**
-- Time-in-error: **501.66 frames (15.70s)**
-
-**results_new_strict/report_tolerance30.json (tolerance = 30 frames)**
-- Frame accuracy: **0.4771**
-- Entry timing MAE: **293.07 frames (9.18s)**
-- GT INSIDE start (mean ± std): **388.61 ± 246.13 frames**
-- Pred INSIDE start (mean ± std): **97.33 ± 121.44 frames**
-- Pred − GT INSIDE start (mean ± std): **-291.28 ± 209.17 frames**
-- GT APPROACHING start (mean ± std): **263.67 ± 231.09 frames**
-- Pred APPROACHING start (mean ± std): **52.80 ± 86.86 frames**
-- Pred − GT APPROACHING start (mean ± std): **-210.87 ± 224.60 frames**
-- Event precision / recall (INSIDE): **0.7421 / 0.9711**
-- Transition precision / recall: **0.0996 / 0.1757**
-- False activation rate (frame-level): **0.5694**
-- False activations / minute: **5.17**
-- Time-in-error: **501.66 frames (15.70s)**
+Videos are evaluated when GT has at least one interval and predictions include `states`.
 
 This repo provides a minimal evaluation harness for state-based workzone metrics. It is wired to the ground-truth JSON format and expects a matching predictions JSON format.
 
 ## Ground-truth JSON (current)
-`workzone_annotations.json` is a dictionary keyed by video snippet name, with state intervals in **inclusive** frame indices:
+`data/annotations/workzone_annotations.json` is a dictionary keyed by video snippet name, with state intervals in **inclusive** frame indices:
 
 ```json
 {
@@ -90,12 +27,23 @@ This repo provides a minimal evaluation harness for state-based workzone metrics
 
 ## Folder Structure
 - `src/workzone_metrics/`: core library code
-- `src/workzone_metrics/metrics/`: metric implementations (frame accuracy, transitions, events, etc.)
+  - `src/workzone_metrics/data_models.py`: Defines dataclasses for ground truth and prediction data structures.
+  - `src/workzone_metrics/io.py`: Handles loading ground truth and prediction data from various formats (JSON, CSV).
+  - `src/workzone_metrics/metrics/`: Metric implementations (frame accuracy, transitions, events, etc.)
+  - `src/workzone_metrics/report.py`: Generates and writes the evaluation reports.
+  - `src/workzone_metrics/cli.py`: Command-line interface for running the metrics harness.
+  - `src/workzone_metrics/utils.py`: Contains common utility functions used across the project.
 - `scripts/`: helper scripts (COCO eval, rerun failures, tolerance sweeps)
 - `tests/`: unit tests for metric logic
-- `results/`: generated reports (JSON summaries)
-- `workzone-main/`: imported workzone pipeline (gitignored)
-- `ROADWORK_data/`: dataset files (videos/images/annotations)
+- `results/`: Top-level directory for generated reports and summaries
+  - `results/rerun_reports/`: Reports from rerun evaluations.
+  - `results/test_city_reports/`: Reports specific to the Test_City dataset.
+- `data/`: Contains all input data for evaluations
+  - `data/annotations/`: Ground truth annotation JSON files (e.g., `workzone_annotations.json`).
+  - `data/sample_predictions/`: Sample prediction outputs.
+  - `data/test_city_videos/`: Video files and annotations specific to the Test_City dataset.
+- `workzone-main/`: imported workzone pipeline (gitignored) - *Note: This folder is part of an external dependency and is not managed by this project's organization.*
+- `workzone-setup-yolo-orin/`: *Note: This folder is part of an external setup and is not managed by this project's organization.*
 
 ## Predictions inputs
 Provide either:
@@ -122,121 +70,122 @@ Create a predictions JSON with the same keys and a `states` object in the same i
 ```
 
 ## Metrics implemented (state-based)
-- Frame accuracy (state per frame)
-- State transition precision/recall (configurable tolerance in frames)
-- Entry timing MAE (frames)
-- False work-zone activation rate (fraction of GT-outside frames predicted non-outside)
-- Mean activation persistence (frames)
-- False activations per minute (requires `fps`)
+This section maps directly to fields emitted by `generate_report`.
 
-## Metric Definitions (How We Calculate)
-This section documents the exact calculation logic used by the harness. Inputs are:
-- **GT**: `workzone_annotations.json` with inclusive frame intervals per state.
-- **Predictions**: timeline CSV(s) with per-frame `frame` and `state` (and optionally `time_sec`).
+Inputs:
+- GT: `data/annotations/workzone_annotations.json` (inclusive intervals).
+- Predictions: interval JSON or timeline CSV(s), converted to per-frame labels.
+- `outside` is treated as the non-advisory state; any non-`outside` state is advisory-active.
 
-### Frame Accuracy
-**Definition**: Percentage of frames where predicted state equals GT state.
+### Core state metrics
+- `frame_accuracy`: `correct_frames / total_frames`.
+- `time_in_error_frames`: `total_frames - correct_frames`.
+- `time_in_error_sec`: `time_in_error_frames / fps` (if `fps` exists).
 
-**Calculation**:
-- Convert GT intervals to a per-frame label array.
-- Convert predicted intervals to a per-frame label array.
-- `frame_accuracy = correct_frames / total_frames`.
+### Transition metrics
+- `transition_recall`: matched GT transitions / GT transitions.
+- `transition_precision`: matched predicted transitions / predicted transitions.
+- `transition_accuracy`: matched transitions / `max(gt_transitions, pred_transitions)`.
+- Transition match rule: same `(from_state, to_state)` and frame distance `<= transition_tolerance_frames`.
 
-### State Transition Precision / Recall / Accuracy
-**Definition**: How well predicted state changes line up with GT transitions.
+### Event and entry metrics (`inside`)
+- `event_recall`: matched GT `inside` intervals / GT `inside` intervals.
+- `event_precision`: matched predicted `inside` intervals / predicted `inside` intervals.
+- Event match rule: overlap `>= min_event_overlap_frames`.
+- `entry_timing_mae_frames`: `abs(first_pred_inside - first_gt_inside)` when both exist.
+- `entry_timing_mae_sec`: `entry_timing_mae_frames / fps` (if `fps` exists).
 
-**Transitions**:
-- A transition is a change in label between consecutive frames: `(from_state → to_state)` at frame `t`.
+### False activation and persistence metrics
+- `false_activation_rate`: `(# GT=outside and Pred!=outside) / (# GT=outside)`.
+- `false_activations_per_minute`: count of false activation episodes per minute (if `fps` exists).
+- `false_positives_per_minute`: alias of `false_activations_per_minute`.
+- `mean_activation_persistence_frames`: mean length of contiguous `Pred!=outside` runs.
+- `mean_activation_persistence_sec`: `mean_activation_persistence_frames / fps` (if `fps` exists).
 
-**Matching rule**:
-- A predicted transition matches a GT transition if:
-  - `(from_state, to_state)` are identical, and
-  - `abs(pred_frame - gt_frame) <= tolerance_frames`.
+### Frame-wise classification quality
+- `iou_outside`, `iou_approaching`, `iou_inside`, `iou_exiting`: per-state IoU.
+- `mean_iou`: mean of available per-state IoUs.
+- `macro_precision`, `macro_recall`, `macro_f1`: macro-averaged frame-wise class metrics over `outside/approaching/inside/exiting`.
 
-**Metrics**:
-- `transition_recall = matched / gt_transitions`
-- `transition_precision = matched / predicted_transitions`
-- `transition_accuracy = matched / max(gt_transitions, predicted_transitions)`
+### Advisory timing and safety proxy metrics
+- `advisory_start_error_frames`: `pred_advisory_start - gt_advisory_start` (signed).
+- `advisory_start_error_sec`: `advisory_start_error_frames / fps` (if `fps` exists).
+- `advisory_timing_mae_frames`: `abs(advisory_start_error_frames)` when starts exist.
+- `advisory_timing_mae_sec`: `advisory_timing_mae_frames / fps` (if `fps` exists).
+- `false_advisory_rate`: currently same formula/value as `false_activation_rate`.
+- `false_advisories_per_minute`: currently same value as `false_activations_per_minute`.
+- `lead_time_sec`: `(first_gt_inside - pred_advisory_start) / fps` (if `fps` and GT `inside` exist).
+- `late_advisory_rate`: `min(1.0, max(0, pred_advisory_start - gt_advisory_start) / gt_advisory_frames)`.
+- `advisory_coverage_ratio`: `(# GT advisory frames with Pred advisory) / (# GT advisory frames)`.
+- `simulated_speed_violation_reduction`: `advisory_coverage_ratio * simulated_compliance_gain` (default gain `0.4`).
 
-### Entry Timing MAE
-**Definition**: Error in the first INSIDE frame.
+### Report-only start diagnostics
+These are computed in `report.py` (not part of `StateMetrics`) for `inside` and `approaching`:
+- `gt_<state>_start_frame`
+- `pred_<state>_start_frame`
+- `pred_minus_gt_<state>_start_frame`
+- `pred_<state>_start_matched_frame`
+- `pred_minus_gt_<state>_start_matched_frame`
 
-**Calculation**:
-- `gt_entry = first GT frame labeled INSIDE`
-- `pred_entry = first predicted frame labeled INSIDE`
-- `entry_timing_mae_frames = abs(pred_entry - gt_entry)`
-- `entry_timing_mae_sec = entry_timing_mae_frames / fps` (if `time_sec` is present)
+The “matched start” uses the first predicted interval that overlaps a GT interval by at least `min_event_overlap_frames`.
 
-### Frame-level False Activation Rate
-**Definition**: Fraction of GT OUTSIDE frames predicted as not-OUTSIDE.
-
-**Calculation**:
-- `false_activation_rate = (# frames where GT=outside and Pred≠outside) / (# GT outside frames)`
-
-### Mean Activation Persistence
-**Definition**: Average length of continuous predicted non-OUTSIDE runs.
-
-**Calculation**:
-- Find contiguous segments where Pred≠outside.
-- `mean_activation_persistence_frames = mean(segment_lengths)`
-- `mean_activation_persistence_sec = mean_activation_persistence_frames / fps` (if available)
-
-### False Activations per Minute
-**Definition**: Rate of false activation events per minute.
-
-**Calculation**:
-- A false activation event is a transition into Pred≠outside while GT=outside.
-- `false_activations_per_minute = false_events / total_minutes`
-
-### Work-Zone Event Precision / Recall (INSIDE)
-**Definition**: Measures whether a work-zone is detected at all, independent of exact timing.
-
-**Event definition**:
-- A GT event is a contiguous GT `inside` interval.
-- A predicted event is a contiguous predicted `inside` interval.
-
-**Matching rule**:
-- A predicted event matches a GT event if their temporal overlap ≥ `min_overlap_frames`.
-
-**Metrics**:
-- `event_recall = matched_gt_events / total_gt_events`
-- `event_precision = matched_pred_events / total_pred_events`
-
-CLI flag:
-- `--min-event-overlap-frames` (default `1`)
-
-**Recommendation**:
-- For our use case, **event-level precision/recall is the primary metric** to judge if a work-zone is detected at all.
-
-### Time-in-Error
-**Definition**: Total duration where predicted state ≠ GT state.
-
-**Calculation**:
-- `time_in_error_frames = total_frames - correct_frames`
-- `time_in_error_sec = time_in_error_frames / fps`
-
-### FPS Estimate
-**Definition**: Estimated frames-per-second from timeline timestamps.
-
-**Calculation**:
-- For each adjacent pair of rows: `fps_i = delta_frames / delta_time_sec`.
-- `fps_estimate = median(fps_i)`.
+### Summary fields
+The report `summary` contains:
+- mean values for numeric per-video metrics.
+- std values for selected timing/start-error metrics.
+- `videos_evaluated` and `videos_total`.
+- `fps_estimate_mean` when FPS is present in predictions.
 
 ## Metrics pending data/schema
 - mAP@0.5 (detection)
 - Precision @ high recall (detection)
 - OCR sign accuracy
-- False positives / minute (detection-driven)
-- FPS (runtime measurement vs. reported)
+- Detection-driven false positives / minute (box-level, not state-level alias)
+- Runtime FPS measurement (separate from timeline-derived `fps_estimate`)
 
 ### Timeline CSV input
 The workzone timeline CSV includes per-frame `state`, `frame`, and `time_sec`. The CLI will parse those into state intervals and estimate FPS from `time_sec`.
 
-## Run
+## Run (General Metrics)
+Use the CLI to compute metrics from any GT JSON and predictions (JSON or timeline CSVs).
+
 ```bash
-python -m workzone_metrics.cli --gt workzone_annotations.json --pred predictions.json --out results/report.json
+python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json --pred data/sample_predictions/predictions.json --out results/report.json
 # or directly from timeline CSV(s)
-python -m workzone_metrics.cli --gt workzone_annotations.json --pred workzone-main/workzone-main/outputs --out results/report.json
+python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json --pred workzone-main/workzone-main/outputs --out results/general_reports/report.json
+```
+
+### General Metrics with Tolerance Sweeps
+```bash
+.venv/bin/python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json --pred workzone-main/workzone-main/outputs/batch --transition-tolerance-frames 5  --out results/rerun_reports/report_tolerance5.json
+.venv/bin/python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json --pred workzone-main/workzone-main/outputs/batch --transition-tolerance-frames 15 --out results/rerun_reports/report_tolerance15.json
+.venv/bin/python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json --pred workzone-main/workzone-main/outputs/batch --transition-tolerance-frames 30 --out results/rerun_reports/report_tolerance30.json
+```
+
+### Run Metrics on Test_City
+```bash
+.venv/bin/python -m workzone_metrics.cli \
+  --gt data/test_city_videos/test_city_workzone_annotations.json \
+  --pred /home/cvrr/projects/workzone_metrics/workzone-main/workzone-main/outputs/test_city \
+  --out results/test_city_reports/report.json
+
+.venv/bin/python -m workzone_metrics.cli \
+  --gt data/test_city_videos/test_city_workzone_annotations.json \
+  --pred /home/cvrr/projects/workzone_metrics/workzone-main/workzone-main/outputs/test_city \
+  --transition-tolerance-frames 5 \
+  --out results/test_city_reports/report_tolerance5.json
+
+.venv/bin/python -m workzone_metrics.cli \
+  --gt data/test_city_videos/test_city_workzone_annotations.json \
+  --pred /home/cvrr/projects/workzone_metrics/workzone-main/workzone-main/outputs/test_city \
+  --transition-tolerance-frames 15 \
+  --out results/test_city_reports/report_tolerance15.json
+
+.venv/bin/python -m workzone_metrics.cli \
+  --gt data/test_city_videos/test_city_workzone_annotations.json \
+  --pred /home/cvrr/projects/workzone_metrics/workzone-main/workzone-main/outputs/test_city \
+  --transition-tolerance-frames 30 \
+  --out results/test_city_reports/report_tolerance30.json
 ```
 
 ## COCO Detection Eval (mAP@0.5)
@@ -245,8 +194,8 @@ This requires `torch`, `ultralytics`, and `pycocotools`. In this environment, pa
 Example (validation split):
 ```bash
 python scripts/coco_eval_yolo.py \\
-  --gt ROADWORK_data/annotations/annotations/instances_val_gps_split_with_signs.json \\
-  --images ROADWORK_data/images/images \\
+  --gt data/ROADWORK_data/annotations/annotations/instances_val_gps_split_with_signs.json \\
+  --images data/ROADWORK_data/images/images \\
   --weights workzone-main/workzone-main/weights/yolo12s_hardneg_1280.pt \\
   --out results/coco_preds_val.json \\
   --summary results/coco_metrics_val.json \\
@@ -257,17 +206,15 @@ python scripts/coco_eval_yolo.py \\
 - Frame intervals are treated as inclusive `[start, end]`.
 - If a video is missing predictions, it is reported with an error entry.
 - If a GT entry has no intervals for any state, it is skipped with `empty_ground_truth`.
-- If a GT entry does not include all four states (`outside`, `approaching`, `inside`, `exiting`) with non-empty intervals, it is skipped with `incomplete_ground_truth`.
 
 ## Why Some Videos Are Skipped
 We skip certain videos to avoid misleading metrics:
 - **`empty_ground_truth`**: The GT has no intervals at all, so there is nothing to score.
-- **`incomplete_ground_truth`**: We require all four states to be present with at least one interval. Missing states make transition/timing metrics ambiguous and inflate accuracy.
 - **`missing predictions or states`**: The model did not produce a timeline CSV or state data for that video, so metrics can’t be computed.
 
 ## Conclusion
-The system reliably detects work zones at the event level (INSIDE recall ≈97%), confirming the end-to-end pipeline functions as intended.
+Use event-level metrics (`event_recall`, `event_precision`) to judge whether work-zones are detected at all.
 
-Predicted APPROACHING and INSIDE states occur systematically early (~7–10s on average), leading to high recall but poor frame-level accuracy, large time-in-error, and weak exact transition alignment under strict tolerances.
+Use timing and transition metrics (`entry_timing_mae_*`, advisory metrics, `transition_*`) to diagnose early/late behavior.
 
-Transition metrics improve predictably as tolerance increases, confirming that errors are dominated by temporal smoothing and persistence rather than missed detections.
+Use frame-level agreement metrics (`frame_accuracy`, `time_in_error_*`, per-state IoU, macro F1) for overall temporal alignment quality.
