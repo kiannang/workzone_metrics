@@ -1,7 +1,16 @@
 # Workzone Metrics Harness
 
 ## Latest Report Summary
-Use `results/rerun_reports/` and `results/test_city_reports/` for the latest generated outputs.
+Latest RoadWorks sweep (`data/annotations/workzone_annotations_full.json`, `results/roadworks_reports/*`):
+
+| Tolerance (frames) | Videos Evaluated | Frame Acc | Event Prec/Rec | Transition Prec/Rec/Acc |
+| --- | --- | --- | --- | --- |
+| 0 | 490 / 520 | 0.6452 | 0.6872 / 0.9653 | 0.0215 / 0.1427 / 0.0133 |
+| 5 | 490 / 520 | 0.6452 | 0.6872 / 0.9653 | 0.0512 / 0.1931 / 0.0429 |
+| 15 | 490 / 520 | 0.6452 | 0.6872 / 0.9653 | 0.1136 / 0.3056 / 0.1038 |
+| 30 | 490 / 520 | 0.6452 | 0.6872 / 0.9653 | 0.1918 / 0.4272 / 0.1815 |
+
+Use `results/roadworks_reports/`, `results/rerun_reports/`, and `results/test_city_reports/` for generated outputs.
 
 The report JSON has:
 - `videos`: per-video metrics (or an `error` entry if skipped).
@@ -36,6 +45,7 @@ This repo provides a minimal evaluation harness for state-based workzone metrics
 - `scripts/`: helper scripts (COCO eval, rerun failures, tolerance sweeps)
 - `tests/`: unit tests for metric logic
 - `results/`: Top-level directory for generated reports and summaries
+  - `results/roadworks_reports/`: Reports from RoadWorks full-dataset evaluations and tolerance sweeps.
   - `results/rerun_reports/`: Reports from rerun evaluations.
   - `results/test_city_reports/`: Reports specific to the Test_City dataset.
 - `data/`: Contains all input data for evaluations
@@ -160,6 +170,18 @@ python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json -
 .venv/bin/python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json --pred workzone-main/workzone-main/outputs/batch --transition-tolerance-frames 5  --out results/rerun_reports/report_tolerance5.json
 .venv/bin/python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json --pred workzone-main/workzone-main/outputs/batch --transition-tolerance-frames 15 --out results/rerun_reports/report_tolerance15.json
 .venv/bin/python -m workzone_metrics.cli --gt data/annotations/workzone_annotations.json --pred workzone-main/workzone-main/outputs/batch --transition-tolerance-frames 30 --out results/rerun_reports/report_tolerance30.json
+```
+
+### RoadWorks Sweep (Current Setup)
+```bash
+mkdir -p results/roadworks_reports
+for t in 0 5 15 30; do
+  .venv/bin/python -m workzone_metrics.cli \
+    --gt data/annotations/workzone_annotations_full.json \
+    --pred /home/cvrr/projects/workzone_metrics/workzone-setup-yolo-orin/outputs/batch \
+    --transition-tolerance-frames $t \
+    --out results/roadworks_reports/report_t${t}.json
+done
 ```
 
 ### Run Metrics on Test_City

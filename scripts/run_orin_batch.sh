@@ -5,14 +5,28 @@ set -euo pipefail
 # Assumes the Python environment already has dependencies installed.
 
 ROOT="/home/cvrr/projects/workzone_metrics"
-REPO="$ROOT/workzone-setup-yolo-orin/workzone-setup-yolo-orin"
-VIDEOS="$ROOT/ROADWORK_data/videos/videos_compressed"
-GT_JSON="$ROOT/workzone_annotations.json"
+REPO="$ROOT/workzone-setup-yolo-orin"
+VIDEOS="$ROOT/data/ROADWORK_data/videos/videos_compressed"
+GT_JSON="$ROOT/data/annotations/workzone_annotations_full.json"
 OUT="$REPO/outputs/batch"
 STRIDE="${STRIDE:-2}"
 
 CONFIG_SRC="$REPO/configs/jetson_config.yaml"
 CONFIG_TMP="$REPO/configs/jetson_config_batch.yaml"
+
+if [[ ! -f "$CONFIG_SRC" ]]; then
+  echo "Missing config: $CONFIG_SRC"
+  exit 1
+fi
+if [[ ! -f "$GT_JSON" ]]; then
+  echo "Missing GT JSON: $GT_JSON"
+  exit 1
+fi
+if [[ ! -d "$VIDEOS" ]]; then
+  echo "Missing videos directory: $VIDEOS"
+  echo "Unpack RoadWorks videos first (videos_compressed.zip + parts) into that path."
+  exit 1
+fi
 
 # Create a batch config that writes outputs where we expect.
 python - <<PY
@@ -52,14 +66,23 @@ with open("$GT_JSON", "r", encoding="utf-8") as f:
 
 script = str(Path("$REPO") / "scripts/jetson_app_sota.py")
 
-ok = 0
-fail = 0
+available = []
+missing = []
 for name in videos:
     video_path = root / name
-    if not video_path.exists():
-        print("MISSING", video_path)
-        fail += 1
-        continue
+    if video_path.exists():
+        available.append(name)
+    else:
+        missing.append(name)
+
+print("GT total:", len(videos))
+print("Available videos:", len(available))
+print("Missing videos:", len(missing))
+
+ok = 0
+fail = 0
+for name in available:
+    video_path = root / name
     # jetson_app_sota writes outputs to config video.output_dir with name "sota_<video_name>.csv"
     csv_path = out_root / f"sota_{video_path.name}".replace(".mp4", ".csv")
     if csv_path.exists():
@@ -87,5 +110,5 @@ for name in videos:
     else:
         ok += 1
 
-print("DONE ok", ok, "fail", fail)
+print("DONE ok", ok, "fail", fail, "missing", len(missing))
 PY

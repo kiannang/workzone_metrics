@@ -121,6 +121,9 @@ def load_predictions_from_timeline_csv(path: str) -> Dict[str, VideoPredictions]
     intervals = _intervals_from_labels(labels)
 
     video_name = path_obj.stem
+    # Batch SOTA runner prefixes timeline files with "sota_".
+    if video_name.startswith("sota_"):
+        video_name = video_name[len("sota_") :]
     for suffix in ("_timeline_fusion", "_timeline", "_calibrated"):
         if video_name.endswith(suffix):
             video_name = video_name[: -len(suffix)]
