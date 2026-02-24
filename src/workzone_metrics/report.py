@@ -8,6 +8,10 @@ from .metrics.state import compute_state_metrics, _first_state_frame
 from .utils import _mean, _stdev, _overlap_len
 
 
+def _n_valid(values) -> int:
+    return len([v for v in values if v is not None])
+
+
 def _matched_pred_start(gt_intervals, pred_intervals, min_overlap_frames: int):
     for g in gt_intervals:
         for p in pred_intervals:
@@ -95,6 +99,8 @@ def generate_report(
     trans_accs = [v.get("transition_accuracy") for v in videos.values() if "transition_accuracy" in v]
     event_recalls = [v.get("event_recall") for v in videos.values() if "event_recall" in v]
     event_precs = [v.get("event_precision") for v in videos.values() if "event_precision" in v]
+    advisory_event_recalls = [v.get("advisory_event_recall") for v in videos.values() if "advisory_event_recall" in v]
+    advisory_event_precs = [v.get("advisory_event_precision") for v in videos.values() if "advisory_event_precision" in v]
     time_err_frames = [v.get("time_in_error_frames") for v in videos.values() if "time_in_error_frames" in v]
     time_err_sec = [v.get("time_in_error_sec") for v in videos.values() if "time_in_error_sec" in v]
     entry_maes = [v.get("entry_timing_mae_frames") for v in videos.values() if "entry_timing_mae_frames" in v]
@@ -136,10 +142,18 @@ def generate_report(
     summary = {
         "frame_accuracy_mean": _mean(frame_accs),
         "transition_recall_mean": _mean(trans_recalls),
+        "transition_recall_n": _n_valid(trans_recalls),
         "transition_precision_mean": _mean(trans_precs),
+        "transition_precision_n": _n_valid(trans_precs),
         "transition_accuracy_mean": _mean(trans_accs),
         "event_recall_mean": _mean(event_recalls),
+        "event_recall_n": _n_valid(event_recalls),
         "event_precision_mean": _mean(event_precs),
+        "event_precision_n": _n_valid(event_precs),
+        "advisory_event_recall_mean": _mean(advisory_event_recalls),
+        "advisory_event_recall_n": _n_valid(advisory_event_recalls),
+        "advisory_event_precision_mean": _mean(advisory_event_precs),
+        "advisory_event_precision_n": _n_valid(advisory_event_precs),
         "time_in_error_frames_mean": _mean(time_err_frames),
         "time_in_error_sec_mean": _mean(time_err_sec),
         "entry_timing_mae_frames_mean": _mean(entry_maes),

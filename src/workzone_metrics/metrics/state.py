@@ -11,11 +11,13 @@ DEFAULT_STATE_ORDER = ["inside", "exiting", "approaching", "outside"]
 @dataclass
 class StateMetrics:
     frame_accuracy: float
-    transition_recall: float
-    transition_precision: float
+    transition_recall: Optional[float]
+    transition_precision: Optional[float]
     transition_accuracy: float
-    event_recall: float
-    event_precision: float
+    event_recall: Optional[float]
+    event_precision: Optional[float]
+    advisory_event_recall: Optional[float]
+    advisory_event_precision: Optional[float]
     time_in_error_frames: int
     time_in_error_sec: Optional[float]
     entry_timing_mae_frames: Optional[float]
@@ -169,6 +171,20 @@ def _first_non_outside_frame(labels: List[str], outside_state: str) -> Optional[
     return None
 
 
+def _events_from_mask(mask: List[bool]) -> List[Tuple[int, int]]:
+    events: List[Tuple[int, int]] = []
+    start: Optional[int] = None
+    for i, active in enumerate(mask):
+        if active and start is None:
+            start = i
+        elif not active and start is not None:
+            events.append((start, i - 1))
+            start = None
+    if start is not None:
+        events.append((start, len(mask) - 1))
+    return events
+
+
 def compute_state_metrics(
     gt_states: StateIntervals,
     pred_states: StateIntervals,
@@ -193,16 +209,28 @@ def compute_state_metrics(
     gt_trans = _transitions(gt_labels)
     pred_trans = _transitions(pred_labels)
     matched, gt_count, pred_count = _match_transitions(gt_trans, pred_trans, transition_tolerance_frames)
-    transition_recall = matched / gt_count if gt_count else 1.0
-    transition_precision = matched / pred_count if pred_count else 1.0
+    transition_recall = matched / gt_count if gt_count else None
+    transition_precision = matched / pred_count if pred_count else None
     denom = max(gt_count, pred_count)
     transition_accuracy = matched / denom if denom else 1.0
 
     gt_events = gt_states.get(entry_state, [])
     pred_events = pred_states.get(entry_state, [])
     matched_events = _match_events(gt_events, pred_events, min_event_overlap_frames)
-    event_recall = matched_events / len(gt_events) if gt_events else 1.0
-    event_precision = matched_events / len(pred_events) if pred_events else 1.0
+    event_recall = matched_events / len(gt_events) if gt_events else None
+    event_precision = matched_events / len(pred_events) if pred_events else None
+
+    gt_advisory_events = _events_from_mask([g != outside_state for g in gt_labels])
+    pred_advisory_events = _events_from_mask([p != outside_state for p in pred_labels])
+    matched_advisory_events = _match_events(
+        gt_advisory_events, pred_advisory_events, min_event_overlap_frames
+    )
+    advisory_event_recall = (
+        matched_advisory_events / len(gt_advisory_events) if gt_advisory_events else None
+    )
+    advisory_event_precision = (
+        matched_advisory_events / len(pred_advisory_events) if pred_advisory_events else None
+    )
 
     gt_entry = _first_state_frame(gt_states, entry_state)
     pred_entry = _first_state_frame(pred_states, entry_state)
@@ -305,6 +333,8 @@ def compute_state_metrics(
         transition_accuracy=transition_accuracy,
         event_recall=event_recall,
         event_precision=event_precision,
+        advisory_event_recall=advisory_event_recall,
+        advisory_event_precision=advisory_event_precision,
         time_in_error_frames=time_in_error_frames,
         time_in_error_sec=time_in_error_sec,
         entry_timing_mae_frames=entry_timing_mae,

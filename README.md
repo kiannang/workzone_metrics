@@ -5,10 +5,10 @@ Latest RoadWorks sweep (`data/annotations/workzone_annotations_full.json`, `resu
 
 | Tolerance (frames) | Videos Evaluated | Frame Acc | Event Prec/Rec | Transition Prec/Rec/Acc |
 | --- | --- | --- | --- | --- |
-| 0 | 490 / 520 | 0.6452 | 0.6872 / 0.9653 | 0.0215 / 0.1427 / 0.0133 |
-| 5 | 490 / 520 | 0.6452 | 0.6872 / 0.9653 | 0.0512 / 0.1931 / 0.0429 |
-| 15 | 490 / 520 | 0.6452 | 0.6872 / 0.9653 | 0.1136 / 0.3056 / 0.1038 |
-| 30 | 490 / 520 | 0.6452 | 0.6872 / 0.9653 | 0.1918 / 0.4272 / 0.1815 |
+| 0 | 490 / 520 | 0.6452 | 0.6732 / 0.9597 | 0.0032 / 0.0092 / 0.0133 |
+| 5 | 490 / 520 | 0.6452 | 0.6732 / 0.9597 | 0.0334 / 0.0675 / 0.0429 |
+| 15 | 490 / 520 | 0.6452 | 0.6732 / 0.9597 | 0.0970 / 0.1975 / 0.1038 |
+| 30 | 490 / 520 | 0.6452 | 0.6732 / 0.9597 | 0.1767 / 0.3380 / 0.1815 |
 
 Use `results/roadworks_reports/`, `results/rerun_reports/`, and `results/test_city_reports/` for generated outputs.
 
@@ -97,11 +97,21 @@ Inputs:
 - `transition_precision`: matched predicted transitions / predicted transitions.
 - `transition_accuracy`: matched transitions / `max(gt_transitions, pred_transitions)`.
 - Transition match rule: same `(from_state, to_state)` and frame distance `<= transition_tolerance_frames`.
+- Undefined-case behavior: if denominator is zero, precision/recall is `None` (not `1.0`).
+  - `transition_precision = None` when there are no predicted transitions.
+  - `transition_recall = None` when there are no GT transitions.
 
 ### Event and entry metrics (`inside`)
 - `event_recall`: matched GT `inside` intervals / GT `inside` intervals.
 - `event_precision`: matched predicted `inside` intervals / predicted `inside` intervals.
 - Event match rule: overlap `>= min_event_overlap_frames`.
+- Undefined-case behavior: if denominator is zero, precision/recall is `None` (not `1.0`).
+  - `event_precision = None` when there are no predicted `inside` events.
+  - `event_recall = None` when there are no GT `inside` events.
+- Advisory-active event metrics (`label != outside`):
+  - `advisory_event_recall`: matched GT advisory-active events / GT advisory-active events.
+  - `advisory_event_precision`: matched predicted advisory-active events / predicted advisory-active events.
+  - Uses the same overlap-based one-to-one matching and `min_event_overlap_frames`.
 - `entry_timing_mae_frames`: `abs(first_pred_inside - first_gt_inside)` when both exist.
 - `entry_timing_mae_sec`: `entry_timing_mae_frames / fps` (if `fps` exists).
 
@@ -141,10 +151,14 @@ The “matched start” uses the first predicted interval that overlaps a GT int
 
 ### Summary fields
 The report `summary` contains:
-- mean values for numeric per-video metrics.
+- mean values for numeric per-video metrics, with `None` values ignored.
 - std values for selected timing/start-error metrics.
 - `videos_evaluated` and `videos_total`.
 - `fps_estimate_mean` when FPS is present in predictions.
+- valid-count fields (`*_n`) for undefined-safe metrics, e.g.:
+  - `transition_precision_n`, `transition_recall_n`
+  - `event_precision_n`, `event_recall_n`
+  - `advisory_event_precision_n`, `advisory_event_recall_n`
 
 ## Metrics pending data/schema
 - mAP@0.5 (detection)

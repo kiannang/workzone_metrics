@@ -21,6 +21,8 @@ def test_state_metrics_basic():
     assert metrics.transition_accuracy == 1.0
     assert metrics.event_recall == 1.0
     assert metrics.event_precision == 1.0
+    assert metrics.advisory_event_recall == 1.0
+    assert metrics.advisory_event_precision == 1.0
     assert metrics.time_in_error_frames == 0
     assert metrics.time_in_error_sec == 0
     assert metrics.entry_timing_mae_frames == 0
@@ -66,3 +68,17 @@ def test_state_metrics_false_activation():
     assert metrics.lead_time_sec is None
     assert metrics.late_advisory_rate == 2 / 3
     assert metrics.advisory_coverage_ratio == 1 / 3
+    assert metrics.advisory_event_recall == 1.0
+    assert metrics.advisory_event_precision == 1.0
+
+
+def test_state_metrics_empty_cases_are_none():
+    gt = {"outside": [(0, 9)]}
+    pred = {"outside": [(0, 9)]}
+    metrics = compute_state_metrics(gt, pred, fps=30)
+    assert metrics.transition_recall is None
+    assert metrics.transition_precision is None
+    assert metrics.event_recall is None
+    assert metrics.event_precision is None
+    assert metrics.advisory_event_recall is None
+    assert metrics.advisory_event_precision is None
